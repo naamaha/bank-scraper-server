@@ -1,10 +1,12 @@
 import express from "express";
+import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import { createScraper, CompanyTypes } from "israeli-bank-scrapers";
 import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+app.use(cors()); // מאפשר קריאות מ-Vercel ומ-localhost
 app.use(express.json());
 
 const AUTH_TOKEN = process.env.SCRAPER_SECRET;
