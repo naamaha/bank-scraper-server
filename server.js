@@ -116,20 +116,30 @@ app.post("/scrape-all", auth, async (req, res) => {
     .from("bank_credentials").select("*")
     .eq("user_id", userId).eq("active", true);
 
+  console.log("[scrape-all] userId:", userId);
+  console.log("[scrape-all] creds error:", error?.message);
+  console.log("[scrape-all] creds found:", bankCreds?.length);
+  bankCreds?.forEach(c => console.log("[scrape-all] bank:", c.company, "active:", c.active, "hasCreds:", !!c.credentials));
+
   if (error) return res.status(500).json({ error: error.message });
   if (!bankCreds?.length) return res.json({ ok: true, results: [], message: "No banks configured" });
 
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - 1);
+  console.log("[scrape-all] startDate:", startDate.toISOString());
 
   const results = [];
   for (const cred of bankCreds) {
     try {
-      const txs   = await scrapeBank({ company: cred.company, credentials: cred.credentials, startDate: startDate.toISOString() });
+      console.log("[scrape-all] scraping:", cred.company);
+      const txs = await scrapeBank({ company: cred.company, credentials: cred.credentials, startDate: startDate.toISOString() });
+      console.log("[scrape-all] txs found:", txs.length);
       const stats = await saveTxs(supabase, userId, txs);
+      console.log("[scrape-all] saved:", JSON.stringify(stats));
       await supabase.from("bank_credentials").update({ last_scraped_at: new Date().toISOString() }).eq("id", cred.id);
       results.push({ company: cred.company, ok: true, ...stats });
     } catch (err) {
+      console.error("[scrape-all] ERROR", cred.company, ":", err.message);
       results.push({ company: cred.company, ok: false, error: err.message });
     }
   }
