@@ -81,7 +81,8 @@ async function saveTxs(supabase, userId, txs) {
     .map(t => ({ user_id: userId, ...t, status: "pending" }));
 
   if (toInsert.length) {
-    const { error } = await supabase.from("raw_transactions").insert(toInsert);
+    const { error } = await supabase.from("raw_transactions")
+      .upsert(toInsert, { onConflict: "user_id,identifier", ignoreDuplicates: true });
     if (error) throw new Error("Supabase insert: " + error.message);
   }
   return { inserted: toInsert.length, skipped: txs.length - toInsert.length };
