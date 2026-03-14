@@ -22,12 +22,13 @@ const auth = (req, res, next) => {
 };
 
 // ── Supabase עם JWT של המשתמש — לא Service Role ──────────────────────────────
-const makeSupabase = (userJwt) => {
+const makeSupabase = async (userJwt) => {
   const client = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY   // anon בלבד
+    process.env.SUPABASE_ANON_KEY,
+    { auth: { persistSession: false } }
   );
-  client.auth.setSession({ access_token: userJwt, refresh_token: "" });
+  await client.auth.setSession({ access_token: userJwt, refresh_token: "" });
   return client;
 };
 
@@ -97,7 +98,7 @@ app.post("/scrape", auth, async (req, res) => {
   if (!COMPANY_MAP[company]) return res.status(400).json({ error: `Unknown: ${company}` });
 
   try {
-    const supabase = makeSupabase(userJwt);
+    const supabase = await makeSupabase(userJwt);
     const txs  = await scrapeBank({ company, credentials, startDate });
     const stats = await saveTxs(supabase, userId, txs);
     res.json({ ok: true, company, total: txs.length, ...stats });
@@ -111,7 +112,7 @@ app.post("/scrape-all", auth, async (req, res) => {
   const { userId, userJwt } = req.body;
   if (!userJwt) return res.status(401).json({ error: "Missing userJwt" });
 
-  const supabase = makeSupabase(userJwt);
+  const supabase = await makeSupabase(userJwt);
   const { data: bankCreds, error } = await supabase
     .from("bank_credentials").select("*")
     .eq("user_id", userId).eq("active", true);
