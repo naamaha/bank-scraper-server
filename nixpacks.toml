@@ -1,5 +1,7 @@
 [phases.setup]
 nixPkgs = [
+  "nodejs_20",
+  "nodePackages.npm",
   "chromium",
   "glib",
   "nss",
