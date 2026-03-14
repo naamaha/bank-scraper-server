@@ -43,6 +43,7 @@ async function scrapeBank({ company, credentials, startDate }) {
     startDate:           new Date(startDate),
     combineInstallments: false,
     showBrowser:         false,
+    args:                ["--no-sandbox", "--disable-setuid-sandbox"],
   });
   const result = await scraper.scrape(credentials);
   if (!result.success)
