@@ -16,8 +16,6 @@ app.use(express.json());
 
 const AUTH_TOKEN = process.env.SCRAPER_SECRET;
 const auth = (req, res, next) => {
-  console.log("AUTH_TOKEN:", JSON.stringify(AUTH_TOKEN));
-  console.log("RECEIVED:", JSON.stringify(req.headers["x-scraper-secret"]));
   if (req.headers["x-scraper-secret"] !== AUTH_TOKEN)
     return res.status(401).json({ error: "Unauthorized" });
   next();
